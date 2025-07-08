@@ -1,0 +1,500 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 14.18 (Ubuntu 14.18-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.18 (Ubuntu 14.18-0ubuntu0.22.04.1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: cntn; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.cntn (
+    cntn__id bigint NOT NULL,
+    prov__id bigint NOT NULL,
+    cntnnmbr character varying(63) NOT NULL,
+    cntnnmro integer NOT NULL
+);
+
+
+ALTER TABLE public.cntn OWNER TO postgres;
+
+--
+-- Name: cntn_cntn__id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.cntn_cntn__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.cntn_cntn__id_seq OWNER TO postgres;
+
+--
+-- Name: cntn_cntn__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.cntn_cntn__id_seq OWNED BY public.cntn.cntn__id;
+
+
+--
+-- Name: parr; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.parr (
+    parr__id bigint NOT NULL,
+    cntn__id bigint NOT NULL,
+    parrnmbr character varying(63) NOT NULL
+);
+
+
+ALTER TABLE public.parr OWNER TO postgres;
+
+--
+-- Name: parr_parr__id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.parr_parr__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.parr_parr__id_seq OWNER TO postgres;
+
+--
+-- Name: parr_parr__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.parr_parr__id_seq OWNED BY public.parr.parr__id;
+
+
+--
+-- Name: prfl; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.prfl (
+    prfl__id bigint NOT NULL,
+    prflpdre bigint,
+    prflcdgo character varying(255) NOT NULL,
+    prfldscr character varying(255) NOT NULL,
+    prflobsr character varying(255),
+    prflnmbr character varying(255) NOT NULL
+);
+
+
+ALTER TABLE public.prfl OWNER TO postgres;
+
+--
+-- Name: prfl_prfl__id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.prfl_prfl__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.prfl_prfl__id_seq OWNER TO postgres;
+
+--
+-- Name: prfl_prfl__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.prfl_prfl__id_seq OWNED BY public.prfl.prfl__id;
+
+
+--
+-- Name: prov; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.prov (
+    prov__id bigint NOT NULL,
+    provnmbr character varying(63) NOT NULL,
+    provnmro integer NOT NULL
+);
+
+
+ALTER TABLE public.prov OWNER TO postgres;
+
+--
+-- Name: prov_prov__id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.prov_prov__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.prov_prov__id_seq OWNER TO postgres;
+
+--
+-- Name: prov_prov__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.prov_prov__id_seq OWNED BY public.prov.prov__id;
+
+
+--
+-- Name: prsn; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.prsn (
+    prsn__id bigint NOT NULL,
+    prsnlogn character varying(255),
+    prsnfcin timestamp without time zone,
+    prsnactv integer NOT NULL,
+    prsntelf character varying(31),
+    prsnpass character varying(63),
+    prsnfcfn timestamp without time zone,
+    prsnapll character varying(31),
+    prsnsexo character varying(255),
+    prsnmail character varying(255) NOT NULL,
+    prsncdla character varying(255),
+    prsnnmbr character varying(31) NOT NULL,
+    prsndire character varying(255)
+);
+
+
+ALTER TABLE public.prsn OWNER TO postgres;
+
+--
+-- Name: prsn_prsn__id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.prsn_prsn__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.prsn_prsn__id_seq OWNER TO postgres;
+
+--
+-- Name: prsn_prsn__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.prsn_prsn__id_seq OWNED BY public.prsn.prsn__id;
+
+
+--
+-- Name: sesn; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.sesn (
+    sesn__id bigint NOT NULL,
+    sesnfcin timestamp without time zone,
+    prsn__id bigint NOT NULL,
+    sesnfcfn timestamp without time zone,
+    prfl__id bigint NOT NULL
+);
+
+
+ALTER TABLE public.sesn OWNER TO postgres;
+
+--
+-- Name: sesn_sesn__id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.sesn_sesn__id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.sesn_sesn__id_seq OWNER TO postgres;
+
+--
+-- Name: sesn_sesn__id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.sesn_sesn__id_seq OWNED BY public.sesn.sesn__id;
+
+
+--
+-- Name: cntn cntn__id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cntn ALTER COLUMN cntn__id SET DEFAULT nextval('public.cntn_cntn__id_seq'::regclass);
+
+
+--
+-- Name: parr parr__id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.parr ALTER COLUMN parr__id SET DEFAULT nextval('public.parr_parr__id_seq'::regclass);
+
+
+--
+-- Name: prfl prfl__id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prfl ALTER COLUMN prfl__id SET DEFAULT nextval('public.prfl_prfl__id_seq'::regclass);
+
+
+--
+-- Name: prov prov__id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prov ALTER COLUMN prov__id SET DEFAULT nextval('public.prov_prov__id_seq'::regclass);
+
+
+--
+-- Name: prsn prsn__id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prsn ALTER COLUMN prsn__id SET DEFAULT nextval('public.prsn_prsn__id_seq'::regclass);
+
+
+--
+-- Name: sesn sesn__id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sesn ALTER COLUMN sesn__id SET DEFAULT nextval('public.sesn_sesn__id_seq'::regclass);
+
+
+--
+-- Data for Name: cntn; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.cntn (cntn__id, prov__id, cntnnmbr, cntnnmro) FROM stdin;
+2	9	Chordeleg	102
+3	10	Guaranda	201
+4	10	Calumna	202
+5	11	Azogues	301
+6	11	Biblián	202
+7	12	Tulcán	401
+8	12	Atuntaqui	402
+9	13	Riobamba	601
+10	13	Guano	602
+11	13	Guamote	603
+12	2	Latacunga	501
+14	1	Quito	1701
+15	1	Mejía	1702
+16	1	Cayambe	1703
+1	9	Cuenca	101
+13	2	Salcedo	502
+\.
+
+
+--
+-- Data for Name: parr; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.parr (parr__id, cntn__id, parrnmbr) FROM stdin;
+\.
+
+
+--
+-- Data for Name: prfl; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.prfl (prfl__id, prflpdre, prflcdgo, prfldscr, prflobsr, prflnmbr) FROM stdin;
+1	\N	A	Usuario	\N	Perfil de Usuario
+\.
+
+
+--
+-- Data for Name: prov; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.prov (prov__id, provnmbr, provnmro) FROM stdin;
+1	Pichincha	17
+2	Cotopaxi	5
+9	Azuay	1
+11	Cañar	3
+10	Bolivar	2
+12	Carchi	4
+13	Chimborazo	6
+\.
+
+
+--
+-- Data for Name: prsn; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.prsn (prsn__id, prsnlogn, prsnfcin, prsnactv, prsntelf, prsnpass, prsnfcfn, prsnapll, prsnsexo, prsnmail, prsncdla, prsnnmbr, prsndire) FROM stdin;
+1	admin	\N	1	0954812330	202cb962ac59075b964b07152d234b70	\N	Perez	M	juanperez@puce.com.ec	1705131453	Juan	10 de agosto
+\.
+
+
+--
+-- Data for Name: sesn; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.sesn (sesn__id, sesnfcin, prsn__id, sesnfcfn, prfl__id) FROM stdin;
+1	2024-05-08 00:00:00	1	\N	1
+\.
+
+
+--
+-- Name: cntn_cntn__id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.cntn_cntn__id_seq', 17, true);
+
+
+--
+-- Name: parr_parr__id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.parr_parr__id_seq', 1, false);
+
+
+--
+-- Name: prfl_prfl__id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.prfl_prfl__id_seq', 1, false);
+
+
+--
+-- Name: prov_prov__id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.prov_prov__id_seq', 13, true);
+
+
+--
+-- Name: prsn_prsn__id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.prsn_prsn__id_seq', 1, false);
+
+
+--
+-- Name: sesn_sesn__id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.sesn_sesn__id_seq', 1, false);
+
+
+--
+-- Name: cntn cntn_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cntn
+    ADD CONSTRAINT cntn_pkey PRIMARY KEY (cntn__id);
+
+
+--
+-- Name: parr parr_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.parr
+    ADD CONSTRAINT parr_pkey PRIMARY KEY (parr__id);
+
+
+--
+-- Name: prfl prfl_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prfl
+    ADD CONSTRAINT prfl_pkey PRIMARY KEY (prfl__id);
+
+
+--
+-- Name: prov prov_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prov
+    ADD CONSTRAINT prov_pkey PRIMARY KEY (prov__id);
+
+
+--
+-- Name: prsn prsn_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prsn
+    ADD CONSTRAINT prsn_pkey PRIMARY KEY (prsn__id);
+
+
+--
+-- Name: sesn sesn_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sesn
+    ADD CONSTRAINT sesn_pkey PRIMARY KEY (sesn__id);
+
+
+--
+-- Name: prsn uk_jx1yj3rkdawlxgc51ikt2tlwx; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prsn
+    ADD CONSTRAINT uk_jx1yj3rkdawlxgc51ikt2tlwx UNIQUE (prsnlogn);
+
+
+--
+-- Name: prfl fka5u4qmvg8v5dxmywu1hi9hxv1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.prfl
+    ADD CONSTRAINT fka5u4qmvg8v5dxmywu1hi9hxv1 FOREIGN KEY (prflpdre) REFERENCES public.prfl(prfl__id);
+
+
+--
+-- Name: cntn fkjgaspta4h4o3lxxv4wuxvbd7o; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cntn
+    ADD CONSTRAINT fkjgaspta4h4o3lxxv4wuxvbd7o FOREIGN KEY (prov__id) REFERENCES public.prov(prov__id);
+
+
+--
+-- Name: sesn fkk603twyrgl2rsyyy3woa88rpd; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sesn
+    ADD CONSTRAINT fkk603twyrgl2rsyyy3woa88rpd FOREIGN KEY (prsn__id) REFERENCES public.prsn(prsn__id);
+
+
+--
+-- Name: parr fksahybtrml70ewy3lt4lqylc8m; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.parr
+    ADD CONSTRAINT fksahybtrml70ewy3lt4lqylc8m FOREIGN KEY (cntn__id) REFERENCES public.cntn(cntn__id);
+
+
+--
+-- Name: sesn fktmpbdqc42dilrcw2dr4k2j1o6; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.sesn
+    ADD CONSTRAINT fktmpbdqc42dilrcw2dr4k2j1o6 FOREIGN KEY (prfl__id) REFERENCES public.prfl(prfl__id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
