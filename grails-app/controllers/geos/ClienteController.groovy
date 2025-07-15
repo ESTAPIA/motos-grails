@@ -180,7 +180,17 @@ class ClienteController {
             redirect(action: "facturas")
             return
         }
-        [factura: factura]
+        
+        // Datos adicionales para la vista profesional
+        def datosEmpresa = [
+            nombre: "Moto-Shop",
+            direccion: "Calle Principal #123, Ciudad",
+            telefono: "(+57) 123-456-7890",
+            email: "contacto@motosguido.com",
+            ruc: "900.123.456-7"
+        ]
+        
+        [factura: factura, datosEmpresa: datosEmpresa]
     }
 }
 

@@ -1,48 +1,32 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="layout" content="main">
+    <meta name="layout" content="main"/>
     <title>Personas</title>
+
+    <!-- ── Estilos propios ─────────────────────────────────────────────── -->
     <style>
-        .nombre-completo {
-            font-weight: 500;
-            color: #2c3e50;
-        }
-        .btn-group-sm .btn {
-            margin-right: 2px;
-        }
-        .btn-group-sm .btn:last-child {
-            margin-right: 0;
-        }
-        #tablaPersonas td {
-            vertical-align: middle;
-        }
-        .label {
-            display: inline-block;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 3px;
-        }
-        .label-success {
-            background-color: #5cb85c;
-            color: white;
-        }
-        .label-danger {
-            background-color: #d9534f;
-            color: white;
-        }
+        .nombre-completo { font-weight: 500; color: #2c3e50; }
+        .btn-group-sm .btn { margin-right: 2px; }
+        .btn-group-sm .btn:last-child { margin-right: 0; }
+        #tablaPersonas td { vertical-align: middle; }
+        .label { display: inline-block; padding: 4px 8px; font-size: 11px;
+                 font-weight: bold; border-radius: 3px; }
+        .label-success { background:#5cb85c; color:#fff; }
+        .label-danger  { background:#d9534f; color:#fff; }
     </style>
 </head>
 
 <body>
 
+<!-- ── Mensajes flash ──────────────────────────────────────────────────── -->
 <g:if test="${flash.message}">
-    <div class="message" role="status">${flash.message}</div>
+    <div class="alert alert-info" role="status">${flash.message}</div>
 </g:if>
 
-<!-- botones -->
-<div class="btn-toolbar toolbar">
+<!-- ── Barra de acciones ──────────────────────────────────────────────── -->
+<div class="btn-toolbar toolbar mb-3">
     <div class="btn-group">
         <g:link controller="inicio" action="index" class="btn btn-secondary">
             <i class="fa fa-arrow-left"></i> Regresar
@@ -54,22 +38,31 @@
             <i class="fa fa-clipboard-list"></i> Nueva Persona
         </a>
     </div>
+
+    <!-- Botón exportar Excel -->
+    <div class="btn-group">
+        <g:link controller="persona" action="reporteExcel" class="btn btn-success">
+            <i class="fa fa-file-excel"></i> Exportar a Excel
+        </g:link>
+    </div>
 </div>
 
+<!-- ── Alert de guardado ──────────────────────────────────────────────── -->
 <div class="col-md-12 alert alert-warning alert-dismissible fade hidden" role="alert">
-    <strong>Se han guardado los datos correctamente.
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
+    <strong>Se han guardado los datos correctamente.</strong>
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
 </div>
 
-<!-- Buscador -->
-<div class="row" style="margin-bottom: 15px;">
+<!-- ── Buscador ────────────────────────────────────────────────────────── -->
+<div class="row mb-3">
     <div class="col-md-6">
         <div class="input-group">
-            <input type="text" class="form-control" id="buscador" placeholder="Buscar por nombre, apellido, login o email...">
+            <input type="text" class="form-control" id="buscador"
+                   placeholder="Buscar por nombre, apellido, login o email..."/>
             <div class="input-group-append">
-                <button class="btn btn-outline-secondary" type="button" id="btnBuscar">
+                <button class="btn btn-outline-secondary" id="btnBuscar">
                     <i class="fa fa-search"></i> Buscar
                 </button>
             </div>
@@ -82,253 +75,143 @@
     </div>
 </div>
 
-<table class="table table-condensed table-bordered table-striped table-hover" id="tablaPersonas">    <thead>
-    <tr>
-        <th>Login</th>
-        <th>Nombre Completo</th>
-        <th>Mail</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-    </tr>
+<!-- ── Tabla ───────────────────────────────────────────────────────────── -->
+<table class="table table-condensed table-bordered table-striped table-hover" id="tablaPersonas">
+    <thead>
+        <tr>
+            <th>Login</th>
+            <th>Nombre Completo</th>
+            <th>Mail</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
     </thead>
     <tbody>
-        <!-- Los datos se cargarán via AJAX -->
+        <!-- contenido dinámico vía AJAX -->
     </tbody>
 </table>
 
+<!-- ── Scripts ─────────────────────────────────────────────────────────── -->
 <script type="text/javascript">
-    var id = null;
+/* global $ bootbox */
 
-    $('#fecha').datetimepicker({
-        locale: 'es',
-        format: 'DD-MM-YYYY',
-        sideBySide: true,
-        icons: {
+// DateTimePicker (si se usa en el modal)
+$('#fecha').datetimepicker({
+    locale : 'es',
+    format : 'DD-MM-YYYY',
+    sideBySide : true
+});
+
+/* ---------- CRUD helpers ---------- */
+function submitForm () {
+    const $form = $('#frmPersona');
+    $.post($form.attr('action'), $form.serialize(), function (msg) {
+        if (msg === 'ok') {
+            $('.alert').removeClass('hidden').addClass('show').alert();
+            setTimeout(() => location.reload(true), 800);
+        } else {
+            log('Error al guardar la persona', 'error');
         }
     });
+}
 
-    function submitForm() {
-        var $form = $("#frmPersona");
-        $.ajax({
-            type: "POST",
-            url: $form.attr("action"),
-            data: $form.serialize(),
-            success: function (msg) {
-                if (msg == 'ok') {
-//                    log("Persona guardada orrectamente", "success");
-
-                    $('.alert').removeClass("hidden")
-                    $('.alert').addClass("show")
-                    $('.alert').alert()
-
-                    setTimeout(function () {
-                        location.reload(true);
-                    }, 1000);
-                } else {
-                    log("Error al guardar la persona", "error")
-                }
-            }
-        });
-    }
-
-
-    function deleteRow(itemId) {
-        console.log("borra",itemId)
-        bootbox.dialog({
-            title: "Alerta",
-            message: "<i class='fa fa-trash fa-3x pull-left text-danger text-shadow'></i><p>" +
-            "¿Está seguro que desea eliminar la persona seleccionada? Esta acción no se puede deshacer.</p>",
-            closeButton: false,
-            buttons: {
-                cancelar: {
-                    label: "Cancelar",
-                    className: "btn-primary",
-                    callback: function () {
-                    }
-                },
-                eliminar: {
-                    label: "<i class='fa fa-trash'></i> Eliminar",
-                    className: "btn-danger",
-                    callback: function () {
-                        $.ajax({
-                            type: "POST",
-                            url: '${createLink(controller: 'persona', action:'delete_ajax')}',
-                            data: {
-                                id: itemId
-                            },
-                            success: function (msg) {
-                                if (msg == 'ok') {
-                                    setTimeout(function () {
-                                        location.reload();
-                                    }, 300);
-                                } else {
-                                    log("Error al borrar la persona", "error")
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        });
-    }
-
-    function createEditRow(id) {
-        var title = id ? "Editar" : "Crear";
-        var data = id ? {id: id} : {};
-        $.ajax({
-            type: "POST",
-            url: "${createLink(controller: 'persona', action:'form_ajax')}",
-            data: data,
-            success: function (msg) {
-                var b = bootbox.dialog({
-                    title: title + " Persona" ,
-                    closeButton: false,
-                    message: msg,
-                    class: "modal-lg",
-                    buttons : {
-                        cancelar : {
-                            label     : "Cancelar",
-                            className : "btn-primary",
-                            callback  : function () {
-                            }
-                        },
-                        guardar  : {
-                            id        : "btnSave",
-                            label     : "<i class='fa fa-save'></i> Guardar",
-                            className : "btn-success",
-                            callback  : function () {
-                                return submitForm();
-                            } //callback
-                        } //guardar
-                    } //button
-                }); //dialog
-                setTimeout(function () {
-                    b.find(".form-control").first().focus()
-                }, 500);
-            } //successJava
-        });
-        //location.reload()//ajax
-    }
-
-    //createEdit
-
-    // Buscador con AJAX - versión con template HTML
-    function filtrarTabla() {
-        console.log("=== INICIO BUSCAR CON AJAX ===");
-        
-        var filtro = $("#buscador").val();
-        console.log("🔍 Filtro aplicado:", filtro);
-        
-        $.ajax({
-            type: "POST",
-            url: "${createLink(controller: 'persona', action:'buscar_ajax')}",
-            data: {filtro: filtro},            success: function (html) {
-                console.log("✅ AJAX exitoso - HTML recibido");
-                console.log("📊 HTML length:", html.length);
-                
-                // Limpiar y actualizar tabla con el HTML recibido
-                $("#tablaPersonas tbody").html(html);
-                
-                console.log("🏁 Tabla actualizada correctamente");
+function deleteRow (itemId) {
+    bootbox.dialog({
+        title   : 'Alerta',
+        message : "<i class='fa fa-trash fa-3x pull-left text-danger text-shadow'></i>"+
+                  "<p>¿Está seguro que desea eliminar la persona seleccionada? "+
+                  "Esta acción no se puede deshacer.</p>",
+        closeButton : false,
+        buttons : {
+            cancelar : {
+                label : 'Cancelar',
+                className : 'btn-primary'
             },
-            error: function(xhr, status, error) {
-                console.log("❌ ERROR EN AJAX:");
-                console.log("Status:", status);
-                console.log("Error:", error);                console.log("Response:", xhr.responseText);
-                $("#resultados").text("Error al buscar");
-                $("#tablaPersonas tbody").html('<tr class="danger"><td colspan="5" class="text-center"><i class="fa fa-exclamation-triangle"></i> Error al cargar datos</td></tr>');
+            eliminar : {
+                label : "<i class='fa fa-trash'></i> Eliminar",
+                className : 'btn-danger',
+                callback () {
+                    $.post('${createLink(controller:"persona",action:"delete_ajax")}',
+                           {id: itemId}, function (msg) {
+                        if (msg === 'ok') setTimeout(() => location.reload(), 300);
+                        else log('Error al borrar la persona', 'error');
+                    });
+                }
+            }
+        }
+    });
+}
+
+function createEditRow (id) {
+    const title = id ? 'Editar' : 'Crear';
+    $.post("${createLink(controller:'persona', action:'form_ajax')}", {id: id}, function (html) {
+        const dlg = bootbox.dialog({
+            title : `${title} Persona`,
+            closeButton : false,
+            message : html,
+            class : 'modal-lg',
+            buttons : {
+                cancelar : {
+                    label     : 'Cancelar',
+                    className : 'btn-primary'
+                },
+                guardar : {
+                    id        : 'btnSave',
+                    label     : "<i class='fa fa-save'></i> Guardar",
+                    className : 'btn-success',
+                    callback  : submitForm
+                }
             }
         });
-        
-        console.log("=== FIN BUSCAR CON AJAX ===\n");
-    }
+        setTimeout(() => dlg.find('.form-control').first().focus(), 400);
+    });
+}
 
-    $(function () {
-        console.log("🚀 INICIALIZANDO PÁGINA DE PERSONAS CON AJAX");
+/* ---------- Tabla y buscador ---------- */
+function filtrarTabla () {
+    const filtro = $('#buscador').val();
+    $.post("${createLink(controller:'persona', action:'buscar_ajax')}", {filtro: filtro}, function (html) {
+        $('#tablaPersonas tbody').html(html);
+    }).fail(function (xhr) {
+        console.error(xhr.responseText);
+        $('#resultados').text('Error al buscar');
+        $('#tablaPersonas tbody').html(
+          '<tr class="danger"><td colspan="5" class="text-center">'+
+          '<i class="fa fa-exclamation-triangle"></i> Error al cargar datos</td></tr>');
+    });
+}
 
-        // Cargar datos iniciales
-        filtrarTabla();
+$(function () {
+    // Cargar inicial
+    filtrarTabla();
 
-        // Evento del botón buscar y tecla Enter
-        $("#btnBuscar").click(function() {
-            console.log("🔘 BOTÓN BUSCAR PRESIONADO");
-            filtrarTabla();
-        });
+    // Eventos
+    $('#btnBuscar').click(filtrarTabla);
+    $('#buscador').keypress(e => { if (e.which === 13) filtrarTabla(); });
 
-        $("#buscador").keypress(function(event) {
-            if (event.which == 13) { // Enter key
-                console.log("⏎ ENTER PRESIONADO");
-                filtrarTabla();
-            }
-        });
+    $('.btnCrear').click(() => { createEditRow(); return false; });
 
-        console.log("✅ Event listeners del buscador configurados");
-
-        $(".btnCrear").click(function () {
-            createEditRow();
-            return false;
-        });
-
-        // Usar event delegation para botones dinámicos
-        $(document).on("click", ".btn-edit", function () {
-            var id = $(this).data("id");
-            console.log("✏️ Editar persona ID:", id);
-            createEditRow(id);
-        });
-
-        $(document).on("click", ".btn-borrar", function () {
-            var id = $(this).data("id");
-            console.log("🗑️ Eliminar persona ID:", id);
-            deleteRow(id);
-        });
-
-        $(document).on("click", ".btn-show", function () {
-            var title = "Ver Persona";
-            var id = $(this).data("id");
-            console.log("👁️ Ver persona ID:", id);
-            $.ajax({
-                type: "POST",
-                url: "${createLink(controller: 'persona', action:'show_ajax')}",
-                data: {id: id},
-                success: function (msg) {
-                    var b = bootbox.dialog({
-                        title: title,
-                        closeButton: false,
-                        message: msg,
-                        buttons: {
-                            aceptar: {
-                                label: "Aceptar",
-                                className: "btn-primary",
-                                callback: function () {
-                                }
-                            }                        },
-                    }); //dialog
-                    setTimeout(function () {
-                        b.find(".form-control").first().focus()
-                    }, 500);
-                } //successJava
+    // Delegación a botones dinámicos
+    $(document).on('click', '.btn-edit',   e => createEditRow($(e.currentTarget).data('id')));
+    $(document).on('click', '.btn-borrar', e => deleteRow($(e.currentTarget).data('id')));
+    $(document).on('click', '.btn-show',   function () {
+        const id = $(this).data('id');
+        $.post("${createLink(controller:'persona', action:'show_ajax')}", {id: id}, function (html) {
+            bootbox.dialog({
+                title : 'Ver Persona',
+                closeButton : false,
+                message : html,
+                buttons : { aceptar : { label : 'Aceptar', className : 'btn-primary' } }
             });
-            //location.reload()//ajax
         });
     });
+});
 </script>
 
-<!-- Modal para mostrar detalles de persona -->
-<div class="modal fade" id="personaModal" tabindex="-1" role="dialog" aria-labelledby="personaModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="personaModalLabel">Detalles de la Persona</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Aquí se cargará el contenido AJAX -->
-                <div id="resultados"></div>
-            </div>
-        </div>
-    </div>
+<!-- ── Modal placeholder (contenido se carga por AJAX) ─────────────────── -->
+<div class="modal fade" id="personaModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg"><div class="modal-content"></div></div>
+</div>
 
 </body>
 </html>

@@ -1,172 +1,225 @@
 package geos
 
 import grails.converters.JSON
-
 import groovy.sql.Sql
 
+// ─── Librerías para Excel ──────────────────────────────────────────────────────
+import org.apache.poi.ss.usermodel.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Cell
+
+// ─── Transacciones ────────────────────────────────────────────────────────────
+import grails.gorm.transactions.Transactional
+
+/**
+ * CRUD de Persona + utilidades (búsqueda AJAX, conteo SQL directo)
+ * Incluye acción `reporteExcel()` que descarga un .xlsx con el listado completo
+ */
 class PersonaController {
 
-    def dataSource    // Inyección del dataSource
+    /** Inyección del DataSource de la aplicación */
+    def dataSource
 
-    def conectarDB() {
-        return new Sql(dataSource)
+    // ───────────────────────────────────────────────────────────────────────────
+    // Helpers
+    // ───────────────────────────────────────────────────────────────────────────
+
+    private Sql conectarDB() {
+        new Sql(dataSource)
     }
 
-    def list() {
-        def personas = Persona.list([sort: 'nombre'])
+    // ───────────────────────────────────────────────────────────────────────────
+    // Acciones CRUD y AJAX
+    // ───────────────────────────────────────────────────────────────────────────
 
-        return [personas: personas]
+    def list() {
+        [personas: Persona.list(sort: 'nombre')]
     }
 
     def form_ajax() {
         def persona = params.id ? Persona.get(params.id) : new Persona()
         [
             personaInstance: persona,
-            tiposPersona: TipoPersona.list(sort: 'descripcion', order: 'asc'),
-            perfiles: Perfil.list(sort: 'nombre', order: 'asc')
+            tiposPersona   : TipoPersona.list(sort: 'descripcion', order: 'asc'),
+            perfiles       : Perfil.list(sort: 'nombre', order: 'asc')
         ]
     }
 
-    def save_ajax(){
+    def save_ajax() {
         println "guarda persona: $params"
-        def persona
+        def persona = params.id ? Persona.get(params.id) : new Persona()
 
-        if(params.id){
-            persona = Persona.get(params.id)
-        }else{
-            persona = new Persona()
-        }
-
-        // Guardar la contraseña actual antes de asignar las propiedades
+        // Conservar hash previo, por si la contraseña no cambia
         def passwordActual = persona.password
-
         persona.properties = params
 
-        // Asignar TipoPersona si viene el id
-        if(params.tipoPersona) {
+        if (params.tipoPersona) {
             persona.tipoPersona = TipoPersona.get(params.tipoPersona)
         }
 
-        // Solo encriptar la contraseña si es nueva o ha cambiado realmente
-        if(params.password) {
-            if(!params.id) {
-                // Persona nueva - siempre encriptar
+        // (Re)-encriptar contraseña si procede
+        if (params.password) {
+            if (!params.id) {
                 persona.password = params.password.encodeAsMD5()
             } else {
-                // Persona existente - solo encriptar si la contraseña cambió
-                def passwordNuevoHash = params.password.encodeAsMD5()
-                if(passwordNuevoHash != passwordActual) {
-                    // La contraseña cambió, usar el nuevo hash
-                    persona.password = passwordNuevoHash
-                } else {
-                    // La contraseña no cambió, mantener la actual
-                    persona.password = passwordActual
-                }
+                def nuevoHash = params.password.encodeAsMD5()
+                persona.password = (nuevoHash != passwordActual) ? nuevoHash : passwordActual
             }
         }
 
-        if(!persona.save(flush:true)){
-            println("error al guardar la persona " + persona.errors)
+        if (!persona.save(flush: true)) {
+            println "error al guardar la persona ${persona.errors}"
             render "no"
-        }else{
+        } else {
             render "ok"
         }
     }
 
-    def delete_ajax(){
+    def delete_ajax() {
         println "elimina persona: $params"
-        def persona
+        def persona = params.id ? Persona.get(params.id) : null
+        if (!persona) {
+            render "no"; return
+        }
 
-        if(params.id){
-            persona = Persona.get(params.id)
-            if(persona){
-                try {
-                    persona.delete(flush: true)
-                    render "ok"
-                } catch (Exception e) {
-                    println("error al eliminar la persona: " + e.message)
-                    render "no"
-                }
-            } else {
-                render "no"
-            }
-        } else {
+        try {
+            persona.delete(flush: true)
+            render "ok"
+        } catch (Exception e) {
+            println "error al eliminar la persona: ${e.message}"
             render "no"
         }
     }
 
-    def show_ajax(){
-        def persona
-        if(params.id) {
-            persona = Persona.get(params.id)
-        }
-        return [personaInstance: persona]
+    def show_ajax() {
+        [personaInstance: params.id ? Persona.get(params.id) : null]
     }
 
-    def buscar_ajax(){
+    def buscar_ajax() {
         println "buscar personas: $params"
         def filtro = params.filtro?.trim()
-        def personas = []
-        def totalSQL = 0
-        
-        if(filtro && filtro != '') {
-            // Buscar por nombre, apellido, login o email
-            personas = Persona.findAll(
-                "FROM Persona p WHERE " +
-                "LOWER(p.nombre) LIKE LOWER(:filtro) OR " +
-                "LOWER(p.apellido) LIKE LOWER(:filtro) OR " +
-                "LOWER(p.login) LIKE LOWER(:filtro) OR " +
-                "LOWER(p.mail) LIKE LOWER(:filtro)",
-                [filtro: "%${filtro}%"]
-            )
-            
-            // Conteo simple - usar GORM primero
-            totalSQL = personas.size()
+        List<Persona> personas
+
+        if (filtro) {
+            personas = Persona.findAll("""
+                FROM Persona p WHERE
+                    LOWER(p.nombre)   LIKE LOWER(:f) OR
+                    LOWER(p.apellido) LIKE LOWER(:f) OR
+                    LOWER(p.login)    LIKE LOWER(:f) OR
+                    LOWER(p.mail)     LIKE LOWER(:f)
+            """, [f: "%${filtro}%"])
         } else {
-            // Si no hay filtro, devolver todas
-            personas = Persona.list([sort: 'nombre'])
-            totalSQL = personas.size()
+            personas = Persona.list(sort: 'nombre')
         }
-        
-        println "Personas encontradas: ${totalSQL}"
-        
-        // Renderizar la vista _buscar_ajax.gsp
-        render(template: 'buscar_ajax', model: [
-            personas: personas,
-            totalSQL: totalSQL,
-            filtro: filtro
-        ])
+
+        render template: 'buscar_ajax', model: [
+            personas : personas,
+            totalSQL : personas.size(),
+            filtro   : filtro
+        ]
     }
 
     def contar() {
-        def sql = conectarDB()
-        
+        Sql sql = conectarDB()
         try {
-            // Consulta 1: Contar registros en la tabla prsn
-            def totalPersonas = sql.firstRow("SELECT COUNT(*) as total FROM prsn")
-            
-            // Consulta 2: Obtener la fecha actual del servidor de base de datos
-            def fechaServidor = sql.firstRow("SELECT CURRENT_DATE as fecha")
-            
-            // Mostrar los resultados
-            def resultado = """
+            def total   = sql.firstRow("SELECT COUNT(*) total FROM prsn")?.total
+            def fechaDB = sql.firstRow("SELECT CURRENT_DATE fecha")?.fecha
+            render """
                 <h3>Consultas SQL Directas</h3>
-                <p><strong>Total de personas en tabla 'prsn':</strong> ${totalPersonas.total}</p>
-                <p><strong>Fecha del servidor:</strong> ${fechaServidor.fecha}</p>
+                <p><strong>Total de personas:</strong> ${total}</p>
+                <p><strong>Fecha servidor:</strong> ${fechaDB}</p>
             """
-            
-            render resultado
-            
-        } catch (Exception e) {
-            println "Error: ${e.message}"
-            render "Error al ejecutar consultas: ${e.message}"
+        } catch (e) {
+            render "Error SQL: ${e.message}"
         } finally {
-            sql.close()
+            sql?.close()
         }
     }
-    
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Acciones de vista / edición normal
+    // ───────────────────────────────────────────────────────────────────────────
+
+    def create() {
+        def tipoCliente  = TipoPersona.findByDescripcionIlike("Cliente")
+        def perfilCliente = Perfil.findByCodigo("CLI")
+        respond new Persona(params).tap {
+            tipoPersona = tipoCliente
+            perfil      = perfilCliente
+        }, model: [
+            tiposPersona: [tipoCliente],
+            perfiles    : Perfil.list(sort: 'nombre', order: 'asc')
+        ]
+    }
+
+    def edit(Long id) {
+        def persona = Persona.get(id)
+        if (!persona) { notFound(); return }
+        respond persona, model: [
+            tiposPersona: TipoPersona.list(sort: 'descripcion', order: 'asc'),
+            perfiles    : Perfil.list(sort: 'nombre', order: 'asc')
+        ]
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Exportar a Excel
+    // ───────────────────────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    def reporteExcel() {
+        List<Persona> personas = Persona.list(sort: 'nombre')
+
+        // 1) Crear libro y hoja
+        XSSFWorkbook wb = new XSSFWorkbook()
+        Sheet sheet    = wb.createSheet('Personas')
+
+        // 2) Encabezados expandidos
+        String[] cols = ['Cédula', 'Login', 'Nombre', 'Apellido', 'Mail', 'Teléfono', 'Dirección', 
+                        'Sexo', 'Fecha Inicio', 'Fecha Fin', 'Tipo Persona', 'Perfil', 'Estado']
+        Row header = sheet.createRow(0)
+        cols.eachWithIndex { label, idx -> header.createCell(idx).setCellValue(label) }
+
+        // 3) Datos completos
+        int rowNum = 1
+        personas.each { p ->
+            Row row = sheet.createRow(rowNum++)
+            row.createCell(0).setCellValue(p.cedula ?: '')
+            row.createCell(1).setCellValue(p.login ?: '')
+            row.createCell(2).setCellValue(p.nombre ?: '')
+            row.createCell(3).setCellValue(p.apellido ?: '')
+            row.createCell(4).setCellValue(p.mail ?: '')
+            row.createCell(5).setCellValue(p.telefono ?: '')
+            row.createCell(6).setCellValue(p.direccion ?: '')
+            row.createCell(7).setCellValue(p.sexo ?: '')
+            row.createCell(8).setCellValue(p.fechaInicio ? p.fechaInicio.format('dd/MM/yyyy') : '')
+            row.createCell(9).setCellValue(p.fechaFin ? p.fechaFin.format('dd/MM/yyyy') : '')
+            row.createCell(10).setCellValue(p.tipoPersona?.descripcion ?: '')
+            row.createCell(11).setCellValue(p.perfil?.nombre ?: '')
+            row.createCell(12).setCellValue(p.activo ? 'Activo' : 'Inactivo')
+        }
+
+        // 4) Ajustar columnas
+        cols.indices.each { sheet.autoSizeColumn(it) }
+
+        // 5) Preparar respuesta HTTP
+        String fileName = "reporte_personas_${new Date().format('yyyyMMdd_HHmm')}.xlsx"
+        response.contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.setHeader 'Content-Disposition', "attachment; filename=${fileName}"
+
+        // 6) Enviar archivo
+        wb.write(response.outputStream)
+        wb.close()
+        response.outputStream.flush()
+        return  // Evita que Grails busque una vista
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Seguridad: solo admin
+    // ───────────────────────────────────────────────────────────────────────────
+
     def beforeInterceptor = {
-        // Solo el admin puede acceder al CRUD de personas
         if (!session.usuario || !session.perfil || session.perfil.codigo != 'ADM') {
             flash.message = "Acceso restringido solo para administradores"
             redirect(controller: "login", action: "login")
@@ -174,29 +227,4 @@ class PersonaController {
         }
         true
     }
-
-    def create() {
-        def tipoCliente = TipoPersona.findByDescripcionIlike("Cliente")
-        def perfilCliente = Perfil.findByCodigo("CLI")
-        def persona = new Persona(params)
-        persona.tipoPersona = tipoCliente
-        persona.perfil = perfilCliente
-        respond persona, model: [
-            tiposPersona: [tipoCliente],
-            perfiles: Perfil.list(sort: 'nombre', order: 'asc')
-        ]
-    }
-
-    def edit(Long id) {
-        def personaInstance = Persona.get(id)
-        if (!personaInstance) {
-            notFound()
-            return
-        }
-        respond personaInstance, model: [
-            tiposPersona: TipoPersona.list(sort:'descripcion', order:'asc'),
-            perfiles: Perfil.list(sort: 'nombre', order: 'asc')
-        ]
-    }
-
 }

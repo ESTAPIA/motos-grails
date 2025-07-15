@@ -172,24 +172,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM loaded, initializing charts...');
             
-            // Función para generar colores distintivos
+            // Función para generar colores aleatorios
             function generarColores(cantidad) {
-                const coloresPredefinidos = [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384',
-                    '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
-                    '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384', '#36A2EB'
-                ];
-                
                 const colores = [];
                 for (let i = 0; i < cantidad; i++) {
-                    if (i < coloresPredefinidos.length) {
-                        colores.push(coloresPredefinidos[i]);
-                    } else {
-                        // Si necesitamos más colores, generar uno basado en HSL con distribución uniforme
-                        const hue = (i * 360 / cantidad) % 360;
-                        colores.push(`hsl(${hue}, 70%, 60%)`);
-                    }
+                    colores.push(`hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`);
                 }
                 return colores;
             }
@@ -198,12 +185,11 @@
             <g:if test="${tiposAccesorioVendidos && tiposAccesorioVendidos.size() > 0}">
                 try {
                     const tiposAccesorioCtx = document.getElementById('tiposAccesorioChart').getContext('2d');
-                    const coloresPastel = generarColores(${tiposAccesorioVendidos.size()});
                     const tiposAccesorioData = {
                         labels: [<g:each in="${tiposAccesorioVendidos}" var="tipo" status="i">'${tipo.nombre?.encodeAsJavaScript()}'<g:if test="${i < tiposAccesorioVendidos.size() - 1}">,</g:if></g:each>],
                         datasets: [{
                             data: [<g:each in="${tiposAccesorioVendidos}" var="tipo" status="i">${tipo.cantidad ?: 0}<g:if test="${i < tiposAccesorioVendidos.size() - 1}">,</g:if></g:each>],
-                            backgroundColor: coloresPastel,
+                            backgroundColor: generarColores(${tiposAccesorioVendidos.size()}),
                             borderColor: '#fff',
                             borderWidth: 2
                         }]
@@ -236,14 +222,13 @@
             <g:if test="${articulosMasVendidos && articulosMasVendidos.size() > 0}">
                 try {
                     const articulosCtx = document.getElementById('articulosChart').getContext('2d');
-                    const coloresBarras = generarColores(${articulosMasVendidos.size()});
                     const articulosData = {
                         labels: [<g:each in="${articulosMasVendidos}" var="art" status="i">'${art.nombre?.encodeAsJavaScript()}'<g:if test="${i < articulosMasVendidos.size() - 1}">,</g:if></g:each>],
                         datasets: [{
                             label: 'Cantidad Vendida',
                             data: [<g:each in="${articulosMasVendidos}" var="art" status="i">${art.cantidad ?: 0}<g:if test="${i < articulosMasVendidos.size() - 1}">,</g:if></g:each>],
-                            backgroundColor: coloresBarras,
-                            borderColor: coloresBarras,
+                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
                             borderWidth: 1
                         }]
                     };

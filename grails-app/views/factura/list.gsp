@@ -15,6 +15,11 @@
             <i class="fa fa-arrow-left"></i> Regresar
         </g:link>
     </div>
+    <div class="btn-group">
+        <a href="${createLink(controller: 'factura', action: 'reporteExcel')}" class="btn btn-success">
+            <i class="fa fa-file-excel"></i> Exportar a Excel
+        </a>
+    </div>
 </div>
 
 <div class="row" style="margin-bottom: 15px;">

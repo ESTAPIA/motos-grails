@@ -1,12 +1,17 @@
-<!DOCTYPE html>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">CT    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <style> html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="layout" content="main">
     <title>Dashboard - Administrador</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>>
     <style>
         .dashboard-card {
             background: #fff;
@@ -164,167 +169,179 @@
                         <a href="${createLink(controller: 'login', action: 'logout')}" class="btn btn-secondary btn-admin">Salir</a>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing charts...');
-            
-            // Función para generar colores distintivos
-            function generarColores(cantidad) {
-                const coloresPredefinidos = [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384',
-                    '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
-                    '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384', '#36A2EB'
-                ];
-                
-                const colores = [];
-                for (let i = 0; i < cantidad; i++) {
-                    if (i < coloresPredefinidos.length) {
-                        colores.push(coloresPredefinidos[i]);
-                    } else {
-                        // Si necesitamos más colores, generar uno basado en HSL con distribución uniforme
-                        const hue = (i * 360 / cantidad) % 360;
-                        colores.push(`hsl(${hue}, 70%, 60%)`);
+        // Función para generar colores aleatorios
+        function generarColores(cantidad) {
+            const colores = [];
+            for (let i = 0; i < cantidad; i++) {
+                colores.push(`hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`);
+            }
+            return colores;
+        }
+
+        // Configuración global de Chart.js
+        Chart.defaults.global.defaultFontFamily = 'Arial, sans-serif';
+        Chart.defaults.global.defaultFontSize = 12;
+
+        // Gráfico de Tipos de Accesorios
+        <g:if test="${tiposAccesorioVendidos}">
+            const tiposAccesorioData = {
+                labels: [<g:each in="${tiposAccesorioVendidos}" var="tipo" status="i">'${tipo.nombre}'<g:if test="${i < tiposAccesorioVendidos.size() - 1}">,</g:if></g:each>],
+                datasets: [{
+                    data: [<g:each in="${tiposAccesorioVendidos}" var="tipo" status="i">${tipo.cantidad}<g:if test="${i < tiposAccesorioVendidos.size() - 1}">,</g:if></g:each>],
+                    backgroundColor: generarColores(${tiposAccesorioVendidos.size()}),
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            };
+
+            const tiposAccesorioConfig = {
+                type: 'pie',
+                data: tiposAccesorioData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        datalabels: {
+                            formatter: (value, context) => {
+                                const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return percentage + '%';
+                            },
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 12
+                            }
+                        }
                     }
                 }
-                return colores;
-            }
+            };
 
-            // Gráfico de Tipos de Accesorios
-            <g:if test="${tiposAccesorioVendidos && tiposAccesorioVendidos.size() > 0}">
-                try {
-                    const tiposAccesorioCtx = document.getElementById('tiposAccesorioChart').getContext('2d');
-                    const coloresPastel = generarColores(${tiposAccesorioVendidos.size()});
-                    const tiposAccesorioData = {
-                        labels: [<g:each in="${tiposAccesorioVendidos}" var="tipo" status="i">'${tipo.nombre?.encodeAsJavaScript()}'<g:if test="${i < tiposAccesorioVendidos.size() - 1}">,</g:if></g:each>],
-                        datasets: [{
-                            data: [<g:each in="${tiposAccesorioVendidos}" var="tipo" status="i">${tipo.cantidad ?: 0}<g:if test="${i < tiposAccesorioVendidos.size() - 1}">,</g:if></g:each>],
-                            backgroundColor: coloresPastel,
-                            borderColor: '#fff',
-                            borderWidth: 2
-                        }]
-                    };
+            new Chart(document.getElementById('tiposAccesorioChart'), tiposAccesorioConfig);
+        </g:if>
 
-                    new Chart(tiposAccesorioCtx, {
-                        type: 'pie',
-                        data: tiposAccesorioData,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom'
+        // Gráfico de Artículos Más Vendidos
+        <g:if test="${articulosMasVendidos}">
+            const articulosData = {
+                labels: [<g:each in="${articulosMasVendidos}" var="art" status="i">'${art.nombre}'<g:if test="${i < articulosMasVendidos.size() - 1}">,</g:if></g:each>],
+                datasets: [{
+                    label: 'Cantidad Vendida',
+                    data: [<g:each in="${articulosMasVendidos}" var="art" status="i">${art.cantidad}<g:if test="${i < articulosMasVendidos.size() - 1}">,</g:if></g:each>],
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            const articulosConfig = {
+                type: 'bar',
+                data: articulosData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => value,
+                            color: '#333',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            };
+
+            new Chart(document.getElementById('articulosChart'), articulosConfig);
+        </g:if>
+
+        // Gráfico de Ventas por Mes
+        <g:if test="${ventasPorMes}">
+            const ventasData = {
+                labels: [<g:each in="${ventasPorMes}" var="venta" status="i">'${venta.mes}'<g:if test="${i < ventasPorMes.size() - 1}">,</g:if></g:each>],
+                datasets: [{
+                    label: 'Ventas ($)',
+                    data: [<g:each in="${ventasPorMes}" var="venta" status="i">${venta.total}<g:if test="${i < ventasPorMes.size() - 1}">,</g:if></g:each>],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            };
+
+            const ventasConfig = {
+                type: 'line',
+                data: ventasData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
                                 }
                             }
                         }
-                    });
-                    console.log('Gráfico de tipos de accesorios creado');
-                } catch (e) {
-                    console.error('Error creando gráfico de tipos de accesorios:', e);
+                    }
                 }
-            </g:if>
-            <g:else>
-                console.log('No hay datos para tipos de accesorios');
-                document.getElementById('tiposAccesorioChart').getContext('2d').fillText('No hay datos disponibles', 50, 50);
-            </g:else>
+            };
 
-            // Gráfico de Artículos Más Vendidos
-            <g:if test="${articulosMasVendidos && articulosMasVendidos.size() > 0}">
-                try {
-                    const articulosCtx = document.getElementById('articulosChart').getContext('2d');
-                    const coloresBarras = generarColores(${articulosMasVendidos.size()});
-                    const articulosData = {
-                        labels: [<g:each in="${articulosMasVendidos}" var="art" status="i">'${art.nombre?.encodeAsJavaScript()}'<g:if test="${i < articulosMasVendidos.size() - 1}">,</g:if></g:each>],
-                        datasets: [{
-                            label: 'Cantidad Vendida',
-                            data: [<g:each in="${articulosMasVendidos}" var="art" status="i">${art.cantidad ?: 0}<g:if test="${i < articulosMasVendidos.size() - 1}">,</g:if></g:each>],
-                            backgroundColor: coloresBarras,
-                            borderColor: coloresBarras,
-                            borderWidth: 1
-                        }]
-                    };
+            new Chart(document.getElementById('ventasChart'), ventasConfig);
+        </g:if>
 
-                    new Chart(articulosCtx, {
-                        type: 'bar',
-                        data: articulosData,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                    console.log('Gráfico de artículos creado');
-                } catch (e) {
-                    console.error('Error creando gráfico de artículos:', e);
-                }
-            </g:if>
-
-            // Gráfico de Ventas por Mes
-            <g:if test="${ventasPorMes && ventasPorMes.size() > 0}">
-                try {
-                    const ventasCtx = document.getElementById('ventasChart').getContext('2d');
-                    const ventasData = {
-                        labels: [<g:each in="${ventasPorMes}" var="venta" status="i">'${venta.mes}'<g:if test="${i < ventasPorMes.size() - 1}">,</g:if></g:each>],
-                        datasets: [{
-                            label: 'Ventas ($)',
-                            data: [<g:each in="${ventasPorMes}" var="venta" status="i">${venta.total ?: 0}<g:if test="${i < ventasPorMes.size() - 1}">,</g:if></g:each>],
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4
-                        }]
-                    };
-
-                    new Chart(ventasCtx, {
-                        type: 'line',
-                        data: ventasData,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                    console.log('Gráfico de ventas creado');
-                } catch (e) {
-                    console.error('Error creando gráfico de ventas:', e);
-                }
-            </g:if>
-
-            // Notificaciones de stock
-            <g:if test="${articulosPocoStock && articulosPocoStock.size() > 0}">
+        // Función para mostrar notificaciones de stock bajo
+        function mostrarNotificacionesStock() {
+            <g:if test="${articulosPocoStock}">
                 const stockCero = ${articulosPocoStock.count { it.stock == 0 }};
                 const stockBajo = ${articulosPocoStock.count { it.stock > 0 && it.stock <= 5 }};
                 
                 if (stockCero > 0) {
-                    console.log('Productos sin stock: ' + stockCero);
+                    toastr.error(`¡Atención! ${stockCero} artículos sin stock`, 'Stock Agotado');
                 }
                 if (stockBajo > 0) {
-                    console.log('Productos con stock bajo: ' + stockBajo);
+                    toastr.warning(`${stockBajo} artículos con poco stock`, 'Stock Bajo');
                 }
             </g:if>
+        }
+
+        // Inicializar notificaciones al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar toastr si está disponible
+            if (typeof toastr !== 'undefined') {
+                toastr.options = {
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 5000
+                };
+                mostrarNotificacionesStock();
+            }
         });
     </script>
 </body>

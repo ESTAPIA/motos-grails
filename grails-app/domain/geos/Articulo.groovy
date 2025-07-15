@@ -7,12 +7,15 @@ class Articulo {
     TipoAccesorio tipoAccesorio
     String imagen
     Integer stock = 0
+    Date dateCreated
+    Date lastUpdated
 
     static mapping = {
         table 'artc'
         cache usage: 'read-write', include: 'non-lazy'
         version false
         id generator: 'identity'
+        autoTimestamp true  // Habilita timestamps automáticos
         columns {
             id column: 'artc__id'
             nombre column: 'artcnmbr'
@@ -21,6 +24,8 @@ class Articulo {
             tipoAccesorio column: 'tpac__id'
             imagen column: 'artcimgn'
             stock column: 'artcstock'
+            dateCreated column: 'artcdtcr'
+            lastUpdated column: 'artcdtup'
         }
     }
 
@@ -36,6 +41,8 @@ class Articulo {
         imagen(blank: true, nullable: true, size: 0..100,
                attributes: [title: 'Ruta de imagen'])
         stock(min: 0, nullable: false, attributes: [title: 'Stock disponible'])
+        dateCreated(nullable: true)
+        lastUpdated(nullable: true)
     }
 
     String toString() {

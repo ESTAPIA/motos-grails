@@ -1,5 +1,15 @@
 package geos
 
+// ─── Librerías para Excel ──────────────────────────────────────────────────────
+import org.apache.poi.ss.usermodel.*
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.Sheet
+import org.apache.poi.ss.usermodel.Row
+import org.apache.poi.ss.usermodel.Cell
+
+// ─── Transacciones ────────────────────────────────────────────────────────────
+import grails.gorm.transactions.Transactional
+
 class FacturaController {
 
     def list() {
@@ -98,5 +108,62 @@ class FacturaController {
             println "Factura no encontrada"
             render "no"
         }
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Exportar a Excel
+    // ───────────────────────────────────────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    def reporteExcel() {
+        List<Factura> facturas = Factura.list(sort: 'fechaEmision', order: 'desc')
+        
+        // 1) Crear libro y hoja
+        XSSFWorkbook wb = new XSSFWorkbook()
+        Sheet sheet = wb.createSheet('Facturas')
+        
+        // 2) Encabezados
+        String[] cols = ['ID Factura', 'ID Pedido', 'Cliente', 'Fecha Emisión', 'Estado Pedido', 'Total']
+        Row header = sheet.createRow(0)
+        cols.eachWithIndex { label, idx -> header.createCell(idx).setCellValue(label) }
+        
+        // 3) Datos
+        int rowNum = 1
+        facturas.each { factura ->
+            Row row = sheet.createRow(rowNum++)
+            row.createCell(0).setCellValue(factura.id ?: '')
+            row.createCell(1).setCellValue(factura.pedido?.id ?: '')
+            row.createCell(2).setCellValue(factura.pedido?.persona?.nombre ?: '')
+            row.createCell(3).setCellValue(factura.fechaEmision ? factura.fechaEmision.format('dd/MM/yyyy') : '')
+            row.createCell(4).setCellValue(factura.pedido?.estado ?: '')
+            row.createCell(5).setCellValue(factura.total ?: 0.0)
+        }
+        
+        // 4) Ajustar columnas
+        cols.indices.each { sheet.autoSizeColumn(it) }
+        
+        // 5) Preparar respuesta HTTP
+        String fileName = "reporte_facturas_${new Date().format('yyyyMMdd_HHmm')}.xlsx"
+        response.contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.setHeader 'Content-Disposition', "attachment; filename=${fileName}"
+        
+        // 6) Enviar archivo
+        wb.write(response.outputStream)
+        wb.close()
+        response.outputStream.flush()
+        return  // Evita que Grails busque una vista
+    }
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Seguridad: solo admin
+    // ───────────────────────────────────────────────────────────────────────────
+
+    def beforeInterceptor = {
+        if (!session.usuario || !session.perfil || session.perfil.codigo != 'ADM') {
+            flash.message = "Acceso restringido solo para administradores"
+            redirect(controller: "login", action: "login")
+            return false
+        }
+        true
     }
 }

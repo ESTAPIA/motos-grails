@@ -37,6 +37,11 @@
             <i class="fa fa-clipboard-list"></i> Nuevo Artículo
         </a>
     </div>
+    <div class="btn-group">
+        <g:link controller="articulo" action="reporteExcel" class="btn btn-success">
+            <i class="fa fa-file-excel"></i> Exportar a Excel
+        </g:link>
+    </div>
 </div>
 
 <div class="col-md-12 alert alert-warning alert-dismissible fade hidden" role="alert">

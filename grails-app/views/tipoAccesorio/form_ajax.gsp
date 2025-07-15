@@ -1,4 +1,4 @@
-<g:if test="${!tipoAccesorioInstance}">
+![1752553554830](image/form_ajax/1752553554830.png)<g:if test="${!tipoAccesorioInstance}">
     <div class="alert alert-danger">
         <i class="fa fa-exclamation-triangle"></i> No se encontró el tipo de accesorio solicitado
     </div>
